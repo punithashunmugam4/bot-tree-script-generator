@@ -16,19 +16,26 @@
     <div class="app-container">
       <aside class="sidebar">
         <h2>Script Builder</h2>
-        <p class="sidebar-hint">
-          Manage workflow nodes via the visual board cards or sidebar drawers.
-        </p>
+        <p class="sidebar-hint">Manage workflow nodes.</p>
 
         <hr />
         <div class="json-controls">
-          <h3>Generated Script</h3>
+          <h4>Generated Script</h4>
           <button
             id="upload-json-btn"
             class="btn secondary-btn"
             title="Upload script json"
           >
             <span class="material-symbols-outlined">upload</span>
+          </button>
+          <button
+            id="copy-json-btn"
+            class="btn secondary-btn"
+            title="Copy Code"
+          >
+            <span class="material-symbols-outlined" id="copyIcon"
+              >content_copy</span
+            >
           </button>
           <button
             id="download-json-btn"

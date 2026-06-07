@@ -767,3 +767,14 @@ document.getElementById("reset-json-btn").addEventListener("click", () => {
     render();
   }
 });
+
+document.getElementById("copy-json-btn").addEventListener("click", async () => {
+  const copyIcon = document.getElementById("copyIcon");
+  await navigator.clipboard.writeText(jsonPreview.textContent);
+  copyIcon.textContent = "check"; // Material symbol for checkmark
+
+  // Reset the button back to normal after 2 seconds
+  setTimeout(() => {
+    copyIcon.textContent = "content_copy";
+  }, 2000);
+});
