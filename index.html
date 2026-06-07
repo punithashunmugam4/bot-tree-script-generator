@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Script Tree Flow Generator</title>
+    <link rel="stylesheet" href="style.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <aside class="sidebar">
+        <h2>Script Builder</h2>
+        <p class="sidebar-hint">
+          Manage workflow nodes via the visual board cards or sidebar drawers.
+        </p>
+
+        <hr />
+        <div class="json-controls">
+          <h3>Generated Script</h3>
+          <button
+            id="upload-json-btn"
+            class="btn secondary-btn"
+            title="Upload script json"
+          >
+            <span class="material-symbols-outlined">upload</span>
+          </button>
+          <button
+            id="download-json-btn"
+            class="btn secondary-btn"
+            title="Download Script json"
+          >
+            <span class="material-symbols-outlined">save</span>
+          </button>
+          <button
+            id="reset-json-btn"
+            class="btn secondary-btn"
+            title="Reset working Script"
+          >
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
+        </div>
+        <pre id="json-preview">{}</pre>
+      </aside>
+
+      <main class="canvas-workspace">
+        <div class="tree-grid-wrapper">
+          <div id="tree-container" class="tree-grid"></div>
+        </div>
+      </main>
+    </div>
+
+    <script src="index.js"></script>
+  </body>
+</html>
