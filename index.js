@@ -795,7 +795,7 @@ document.getElementById("copy-json-btn").addEventListener("click", async () => {
     // return window.prompt(
     //   "Enter a GitHub personal access token with repo contents write access to save this bot:",
     // );
-    return _env.BOT_TREE_TOKEN || null;
+    return _env.BOT_TREE_TOKEN || PROCESS.ENV.BOT_TREE_TOKEN;
   }
 
   function encodeBase64(text) {
