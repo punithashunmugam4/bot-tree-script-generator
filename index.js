@@ -795,7 +795,12 @@ document.getElementById("copy-json-btn").addEventListener("click", async () => {
     // return window.prompt(
     //   "Enter a GitHub personal access token with repo contents write access to save this bot:",
     // );
-    return _env?.BOT_TREE_TOKEN || PROCESS.ENV.BOT_TREE_TOKEN;
+    if(_env && _env.BOT_TREE_TOKEN) {
+      return _env.BOT_TREE_TOKEN;
+    }
+    else if (PROCESS && PROCESS.ENV && PROCESS.ENV.BOT_TREE_TOKEN) {
+      return PROCESS.ENV.BOT_TREE_TOKEN;
+    }
   }
 
   function encodeBase64(text) {
