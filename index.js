@@ -1,4 +1,5 @@
 // Application State
+
 const state = {
   nodes: [
     {
@@ -22,6 +23,7 @@ const state = {
   ],
   nextIdCounter: 1002,
 };
+const default_state={...state};
 
 const initial_state = JSON.parse(JSON.stringify(state));
 let activeNodeId = null;
@@ -777,4 +779,198 @@ document.getElementById("copy-json-btn").addEventListener("click", async () => {
   setTimeout(() => {
     copyIcon.textContent = "content_copy";
   }, 2000);
+});
+
+
+  // const GITHUB_USER = PROCESS.ENV.GITHUB_USER || "punithashunmugam4";
+  // const GITHUB_REPO = PROCESS.ENV.GITHUB_REPO || "bot-automation-trees";
+  // const BRANCH = PROCESS.ENV.BRANCH || "main";
+    const GITHUB_USER = "punithashunmugam4";
+  const GITHUB_REPO = "bot-automation-trees";
+  const BRANCH = "main";
+  const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}`;
+  let bot_list=[]
+
+  async function getGitHubToken() {
+    // return window.prompt(
+    //   "Enter a GitHub personal access token with repo contents write access to save this bot:",
+    // );
+    return _env.BOT_TREE_TOKEN || null;
+  }
+
+  function encodeBase64(text) {
+    const bytes = new TextEncoder().encode(text);
+    let binary = "";
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return btoa(binary);
+  }
+
+  async function saveScriptToGitHub(fileName, scriptText) {
+    const token = await getGitHubToken();
+    if (!token) {
+      alert("A GitHub token is required to save the script to the cloud.");
+      return;
+    }
+
+    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${encodeURIComponent(fileName)}`;
+    const headers = {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${token}`,
+      "X-GitHub-Api-Version": "2022-11-28",
+      "User-Agent": "script-generator",
+    };
+
+    let existingFile = null;
+    try {
+      const existingResponse = await fetch(`${url}?ref=${BRANCH}`, {
+        method: "GET",
+        headers,
+      });
+
+      if (existingResponse.status === 404) {
+        console.info(`GitHub file ${fileName} does not exist yet. It will be created.`);
+      } else if (existingResponse.ok) {
+        existingFile = await existingResponse.json();
+      } else {
+        const errorBody = await existingResponse.json().catch(() => ({}));
+        throw new Error(
+          errorBody?.message || `GitHub lookup failed with status ${existingResponse.status}`,
+        );
+      }
+    } catch (error) {
+      if (error?.message?.includes("404")) {
+        console.info(`GitHub file ${fileName} does not exist yet. It will be created.`);
+      } else {
+        console.warn("Could not read the existing GitHub file:", error);
+      }
+    }
+
+    const body = {
+      message: `Save ${fileName}`,
+      content: encodeBase64(scriptText),
+      branch: BRANCH,
+    };
+
+    if (existingFile?.sha) {
+      body.sha = existingFile.sha;
+    }
+
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const responseBody = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(responseBody?.message || `GitHub save failed with status ${response.status}`);
+    }
+
+    return responseBody;
+  }
+
+document.addEventListener("DOMContentLoaded", async() => {
+  try {
+    // 1. Fetch the manifest file from GitHub
+    // const response = await axios.get(`${baseUrl}/manifest.json`);
+    const response = await fetch(`${baseUrl}/manifest.json`).then((res) => res.json() );
+    console.log(response)
+    const manifest = response;
+    console.log(manifest)
+   bot_list=manifest?.bot_list || []
+  } catch (error) {
+    console.error("Error fetching manifest:", error);
+  } 
+  const botSelect = document.getElementById("bot-select");
+  botSelect.innerHTML = '<option value="">-- Select a Bot --</option>';
+
+  bot_list.forEach((bot) => {
+    console.log(bot);
+    const option = document.createElement("option");
+    option.value = bot;
+    option.textContent = bot.split(".")[0]; 
+    botSelect.appendChild(option);
+  }
+   
+);
+const create = document.createElement("option");
+    create.value = "create";
+    create.textContent = "-- Create New Bot --";  
+   botSelect.appendChild(create);
+});
+
+document.getElementById("bot-select").addEventListener("change", async(e) => {
+  const selectedBot = e.target.value;
+  if (selectedBot) {
+    const botData = bot_list.find((bot) => bot === selectedBot);
+    if (botData) {
+      const script =await fetch(`${baseUrl}/${selectedBot}`).then((res) => res.json());
+      console.log(script)
+      state.nodes = Object.entries(script).map(([id, node]) => ({
+        id: Number(id),
+        name: node.name || `Node Step ${id}`,
+        metadata: node.metadata,  
+      branches: Object.entries(node.conditionalRoutes).map(
+        ([conditionValue, next]) => ({ conditionValue, next }),
+      ),
+        x: 0,
+        y: 0,
+      }));    
+
+      state.nextIdCounter =
+        Math.max(...state.nodes.map((n) => n.id)) + 1 || 1000;
+      closeDrawer();
+      calculateAutoTreeLayout();
+      render();
+    }
+    else if (selectedBot === "create") {
+      const newBotName = prompt("Enter the name for the new bot (without extension):");
+      if (newBotName) {
+        const newBotFileName = `${newBotName}.json`;
+        bot_list.push(newBotFileName);
+        const botSelect = document.getElementById("bot-select");
+        const newOption = document.createElement("option");
+        newOption.value = newBotFileName;
+        newOption.textContent = newBotName;
+        botSelect.firstElementChild.insertAdjacentElement("afterend", newOption);
+        botSelect.value = newBotFileName;
+        console.log(default_state);
+        state.nodes = default_state.nodes;
+        state.nextIdCounter = 1000;
+        closeDrawer();
+        calculateAutoTreeLayout();
+        render();
+      }
+    }
+
+  }
+});
+
+document.getElementById("save-cloud-json-btn").addEventListener("click", async (e) => {
+  const selectedBot = document.getElementById("bot-select").value;
+  if (!selectedBot) {
+    alert("No bot selected. Please select a bot to save the script.");
+    return;
+  }
+else{
+  try {
+    const scriptText = jsonPreview.textContent.trim();
+    if (!scriptText || scriptText === "{}") {
+      alert("The script preview is empty. Build a workflow before saving.");
+      return;
+    }
+
+    JSON.parse(scriptText);
+    await saveScriptToGitHub(selectedBot, scriptText);
+    alert(`Saved ${selectedBot} to GitHub successfully.`);
+  } catch (error) {
+    console.error("Failed to save script to GitHub:", error);
+    alert(error.message || "Failed to save the script to GitHub.");
+  }
+}
 });

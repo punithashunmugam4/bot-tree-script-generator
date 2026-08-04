@@ -406,3 +406,20 @@ select {
   color: #52525b;
   border-color: #3f3f46;
 }
+
+
+select {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  padding: 8px 10px;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  width: 100%;
+  margin-right: 8px;
+}
+option {
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+
+}
