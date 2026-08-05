@@ -782,112 +782,42 @@ document.getElementById("copy-json-btn").addEventListener("click", async () => {
 });
 
 
-  // const GITHUB_USER = PROCESS.ENV.GITHUB_USER || "punithashunmugam4";
-  // const GITHUB_REPO = PROCESS.ENV.GITHUB_REPO || "bot-automation-trees";
-  // const BRANCH = PROCESS.ENV.BRANCH || "main";
-    const GITHUB_USER = "punithashunmugam4";
-  const GITHUB_REPO = "bot-automation-trees";
-  const BRANCH = "main";
-  const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}`;
-  let bot_list=[]
+  const CLOUD_BUCKET_BASE_URL =
+    _env?.CLOUD_BUCKET_BASE_URL || "https://storage.googleapis.com/bot-trees";
+  const baseUrl = CLOUD_BUCKET_BASE_URL;
+  let bot_list = [];
 
-  async function getGitHubToken() {
-    // return window.prompt(
-    //   "Enter a GitHub personal access token with repo contents write access to save this bot:",
-    // );
-
-    console.log(_env.BOT_TREE_TOKEN, PROCESS.ENV.BOT_TREE_TOKEN)
-    return _env.BOT_TREE_TOKEN || PROCESS.ENV.BOT_TREE_TOKEN;
-  }
-
-  function encodeBase64(text) {
-    const bytes = new TextEncoder().encode(text);
-    let binary = "";
-    bytes.forEach((byte) => {
-      binary += String.fromCharCode(byte);
-    });
-    return btoa(binary);
-  }
-
-  async function saveScriptToGitHub(fileName, scriptText) {
-    const token = await getGitHubToken();
-    if (!token) {
-      alert("A GitHub token is required to save the script to the cloud.");
-      return;
-    }
-
-    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${encodeURIComponent(fileName)}`;
-    const headers = {
-      Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "script-generator",
-    };
-
-    let existingFile = null;
-    try {
-      const existingResponse = await fetch(`${url}?ref=${BRANCH}`, {
-        method: "GET",
-        headers,
-      });
-
-      if (existingResponse.status === 404) {
-        console.info(`GitHub file ${fileName} does not exist yet. It will be created.`);
-      } else if (existingResponse.ok) {
-        existingFile = await existingResponse.json();
-      } else {
-        const errorBody = await existingResponse.json().catch(() => ({}));
-        throw new Error(
-          errorBody?.message || `GitHub lookup failed with status ${existingResponse.status}`,
-        );
-      }
-    } catch (error) {
-      if (error?.message?.includes("404")) {
-        console.info(`GitHub file ${fileName} does not exist yet. It will be created.`);
-      } else {
-        console.warn("Could not read the existing GitHub file:", error);
-      }
-    }
-
-    const body = {
-      message: `Save ${fileName}`,
-      content: encodeBase64(scriptText),
-      branch: BRANCH,
-    };
-
-    if (existingFile?.sha) {
-      body.sha = existingFile.sha;
-    }
-
+  async function saveScriptToCloud(fileName, scriptText) {
+    const url = `${baseUrl}/${encodeURIComponent(fileName)}`;
     const response = await fetch(url, {
       method: "PUT",
       headers: {
-        ...headers,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: scriptText,
     });
 
-    const responseBody = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(responseBody?.message || `GitHub save failed with status ${response.status}`);
+      const errorBody = await response.text().catch(() => "");
+      throw new Error(
+        errorBody || `Cloud save failed with status ${response.status}`,
+      );
     }
 
-    return responseBody;
+    return response;
   }
 
-document.addEventListener("DOMContentLoaded", async() => {
+document.addEventListener("DOMContentLoaded", async () => {
   try {
-    // 1. Fetch the manifest file from GitHub
-    // const response = await axios.get(`${baseUrl}/manifest.json`);
-    const response = await fetch(`${baseUrl}/manifest.json`).then((res) => res.json() );
-    console.log(response)
+    const response = await fetch(`${baseUrl}/manifest.json`).then((res) => res.json());
+    console.log(response);
     const manifest = response;
-    console.log(manifest)
-   bot_list=manifest?.bot_list || []
+    console.log(manifest);
+    bot_list = manifest?.bot_list || [];
   } catch (error) {
     console.error("Error fetching manifest:", error);
-  } 
+  }
+
   const botSelect = document.getElementById("bot-select");
   botSelect.innerHTML = '<option value="">-- Select a Bot --</option>';
 
@@ -895,15 +825,14 @@ document.addEventListener("DOMContentLoaded", async() => {
     console.log(bot);
     const option = document.createElement("option");
     option.value = bot;
-    option.textContent = bot.split(".")[0]; 
+    option.textContent = bot.split(".")[0];
     botSelect.appendChild(option);
-  }
-   
-);
-const create = document.createElement("option");
-    create.value = "create";
-    create.textContent = "-- Create New Bot --";  
-   botSelect.appendChild(create);
+  });
+
+  const create = document.createElement("option");
+  create.value = "create";
+  create.textContent = "-- Create New Bot --";
+  botSelect.appendChild(create);
 });
 
 document.getElementById("bot-select").addEventListener("change", async(e) => {
@@ -959,7 +888,7 @@ document.getElementById("save-cloud-json-btn").addEventListener("click", async (
     alert("No bot selected. Please select a bot to save the script.");
     return;
   }
-else{
+
   try {
     const scriptText = jsonPreview.textContent.trim();
     if (!scriptText || scriptText === "{}") {
@@ -968,11 +897,10 @@ else{
     }
 
     JSON.parse(scriptText);
-    await saveScriptToGitHub(selectedBot, scriptText);
-    alert(`Saved ${selectedBot} to GitHub successfully.`);
+    await saveScriptToCloud(selectedBot, scriptText);
+    alert(`Saved ${selectedBot} to Google Cloud bucket successfully.`);
   } catch (error) {
-    console.error("Failed to save script to GitHub:", error);
-    alert(error.message || "Failed to save the script to GitHub.");
+    console.error("Failed to save script to cloud bucket:", error);
+    alert(error.message || "Failed to save the script to the cloud bucket.");
   }
-}
 });

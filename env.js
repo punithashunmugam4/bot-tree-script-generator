@@ -1,4 +1,4 @@
 
 const _env={
-  BOT_TREE_TOKEN:"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"
+  CLOUD_BUCKET_BASE_URL: "https://storage.googleapis.com/bot-trees"
 }
