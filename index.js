@@ -450,6 +450,7 @@ function openDrawer(nodeId) {
       </div>
     </div>
     
+    
     <div class="branches-section">
       <div class="section-title">
         <label>Conditional Paths</label>
@@ -782,30 +783,49 @@ document.getElementById("copy-json-btn").addEventListener("click", async () => {
 });
 
 
-  const CLOUD_BUCKET_BASE_URL =
-    _env?.CLOUD_BUCKET_BASE_URL || "https://storage.googleapis.com/bot-trees";
-  const baseUrl = CLOUD_BUCKET_BASE_URL;
+  // const CLOUD_BUCKET_BASE_URL =
+  //   _env?.CLOUD_BUCKET_BASE_URL || "https://storage.googleapis.com/bot-trees";
+  // const baseUrl = CLOUD_BUCKET_BASE_URL;
+
+
+  // async function saveScriptToCloud(fileName, scriptText) {
+  //   const url = `${baseUrl}/${encodeURIComponent(fileName)}`;
+
+  //   const existingCheck = await fetch(url, {
+  //     method: "HEAD",
+  //     mode: "cors",
+  //   }).catch(() => null);
+
+  //   if (existingCheck && existingCheck.status === 404) {
+  //     console.info(`Cloud file ${fileName} does not exist yet. It will be created.`);
+  //   } else if (existingCheck && !existingCheck.ok) {
+  //     const errorBody = await existingCheck.text().catch(() => "");
+  //     throw new Error(
+  //       errorBody || `Cloud lookup failed with status ${existingCheck.status}`,
+  //     );
+  //   }
+
+  //   const response = await fetch(url, {
+  //     method: "PUT",
+  //     mode: "cors",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: scriptText,
+  //   });
+
+  //   if (!response.ok) {
+  //     const errorBody = await response.text().catch(() => "");
+  //     throw new Error(
+  //       errorBody || `Cloud save failed with status ${response.status}`,
+  //     );
+  //   }
+
+  //   return response;
+  // }
+
+   let baseUrl="https://raw.githubusercontent.com/punithashunmugam4/bot-automation-trees/main";
   let bot_list = [];
-
-  async function saveScriptToCloud(fileName, scriptText) {
-    const url = `${baseUrl}/${encodeURIComponent(fileName)}`;
-    const response = await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: scriptText,
-    });
-
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      throw new Error(
-        errorBody || `Cloud save failed with status ${response.status}`,
-      );
-    }
-
-    return response;
-  }
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -882,25 +902,25 @@ document.getElementById("bot-select").addEventListener("change", async(e) => {
   }
 });
 
-document.getElementById("save-cloud-json-btn").addEventListener("click", async (e) => {
-  const selectedBot = document.getElementById("bot-select").value;
-  if (!selectedBot) {
-    alert("No bot selected. Please select a bot to save the script.");
-    return;
-  }
+// document.getElementById("save-cloud-json-btn").addEventListener("click", async (e) => {
+//   const selectedBot = document.getElementById("bot-select").value;
+//   if (!selectedBot) {
+//     alert("No bot selected. Please select a bot to save the script.");
+//     return;
+//   }
 
-  try {
-    const scriptText = jsonPreview.textContent.trim();
-    if (!scriptText || scriptText === "{}") {
-      alert("The script preview is empty. Build a workflow before saving.");
-      return;
-    }
+//   try {
+//     const scriptText = jsonPreview.textContent.trim();
+//     if (!scriptText || scriptText === "{}") {
+//       alert("The script preview is empty. Build a workflow before saving.");
+//       return;
+//     }
 
-    JSON.parse(scriptText);
-    await saveScriptToCloud(selectedBot, scriptText);
-    alert(`Saved ${selectedBot} to Google Cloud bucket successfully.`);
-  } catch (error) {
-    console.error("Failed to save script to cloud bucket:", error);
-    alert(error.message || "Failed to save the script to the cloud bucket.");
-  }
-});
+//     JSON.parse(scriptText);
+//     await saveScriptToCloud(selectedBot, scriptText);
+//     alert(`Saved ${selectedBot} to Google Cloud bucket successfully.`);
+//   } catch (error) {
+//     console.error("Failed to save script to cloud bucket:", error);
+//     alert(error.message || "Failed to save the script to the cloud bucket.");
+//   }
+// });
