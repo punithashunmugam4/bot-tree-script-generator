@@ -32,50 +32,95 @@ let activeEditorInstance = null;
 const inbuiltFunctions = [
   {
     label: "openNewTab",
-    insertText: "openNewTab('${1:url}');",
+    insertText: "openNewTab('$url');",
     detail: "openNewTab(url)",
   },
   {
     label: "window.globalVars.set",
-    insertText: "window.globalVars.set('${1:key}', ${2:value});",
+    insertText: "window.globalVars.set('$key', '$value');",
     detail: "globalVars.set(key, val)",
   },
   {
     label: "window.globalVars.get",
-    insertText: "await window.globalVars.get('${1:key}');",
+    insertText: "await window.globalVars.get('$key');",
     detail: "globalVars.get(key)",
   },
-  { label: "sleep", insertText: "sleep(${1:ms});", detail: "sleep(ms)" },
+  { label: "sleep", insertText: "sleep($ms);", detail: "sleep(ms)" },
   {
     label: "console.log",
-    insertText: "console.log(${1:msg});",
+    insertText: "console.log($msg);",
     detail: "console.log(msg)",
   },
+  {
+    label: "clickwait_onload",
+    insertText: "clickwait_onload('$xpath');",
+    detail: "clickwait_onload(xpath)",
+  },
+  {
+    label: "write_value_to_xpath",
+    insertText: "write_value_to_xpath('$xpath', '$value');",
+    detail: "write_value_to_xpath(xpath, value)",
+  },
+  {
+    label: "write_to_xpath",
+    insertText: "write_to_xpath('$xpath', '$value');",
+    detail: "write_to_xpath(xpath, value)",
+  }
+  
 ];
+
+function  insertInbuiltFunction(value) {
+
+  if (activeEditorInstance && value) {
+    const position = activeEditorInstance.getPosition();
+    activeEditorInstance.executeEdits("", [
+      {
+        range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),  
+        text: value,
+        forceMoveMarkers: true,
+      },
+    ]);
+  }}
+
 
 const treeContainer = document.getElementById("tree-container");
 const jsonPreview = document.getElementById("json-preview");
 const workspace = document.querySelector(".canvas-workspace");
-
-// Verify and build configuration drawer infrastructure
-let editDrawer = document.getElementById("edit-drawer");
-if (!editDrawer) {
-  editDrawer = document.createElement("div");
-  editDrawer.id = "edit-drawer";
-  editDrawer.className = "edit-drawer";
-  editDrawer.innerHTML = `
-    <div class="drawer-header">
-      <h3 id="drawer-title">Configure Node</h3>
-      <button id="close-drawer-btn" class="btn close-btn">×</button>
-    </div>
-    <div id="drawer-body" class="drawer-body"></div>
-  `;
-  document.querySelector(".app-container").appendChild(editDrawer);
-}
+const editDrawer = document.getElementById("edit-drawer");
+const drawerResizer = document.getElementById("drawer-resizer");
 
 const drawerBody = document.getElementById("drawer-body");
 const drawerTitle = document.getElementById("drawer-title");
 const closeDrawerBtn = document.getElementById("close-drawer-btn");
+const drawerMinWidth = 320;
+const drawerMaxWidth = 860;
+let isDrawerResizing = false;
+
+function setDrawerWidth(width) {
+  const clampedWidth = Math.min(
+    Math.max(width, drawerMinWidth),
+    drawerMaxWidth,
+  );
+  editDrawer.style.setProperty("--drawer-width", `${clampedWidth}px`);
+}
+
+if (drawerResizer) {
+  drawerResizer.addEventListener("pointerdown", (event) => {
+    if (!editDrawer.classList.contains("open")) return;
+    isDrawerResizing = true;
+    event.preventDefault();
+  });
+}
+
+window.addEventListener("pointermove", (event) => {
+  if (!isDrawerResizing) return;
+  const nextWidth = window.innerWidth - event.clientX;
+  setDrawerWidth(nextWidth);
+});
+
+window.addEventListener("pointerup", () => {
+  isDrawerResizing = false;
+});
 
 const canvas = document.createElement("canvas");
 canvas.id = "arrow-canvas";
@@ -440,6 +485,13 @@ function openDrawer(nodeId) {
       </div>
       ${isDeleteDisabled ? `<span class="disabled-warning-text">Cannot delete node while children are connected.</span>` : ""}
     </div>
+    <div>
+    <select id="inbuilt-functions-dropdown" onchange="insertInbuiltFunction(this.value)">
+      <option value="">-- Insert Inbuilt Function --</option>
+      ${inbuiltFunctions.map((fn) => `<option value="${fn.insertText}">${fn.label}</option>`).join('')}
+    </select>
+
+    </div>
 
     <div class="drawer-section">
       <div class="drawer-action-header">
@@ -476,6 +528,9 @@ function openDrawer(nodeId) {
   activeEditorInstance.onDidChangeModelContent(() => {
     updateMetadata(node.id, activeEditorInstance.getValue());
   });
+
+  // set cursor on 3rd line 
+  activeEditorInstance.setPosition({ lineNumber: 3, column: 1 });
 
   document.getElementById("node-name-input").addEventListener("input", (e) => {
     updateNodeName(node.id, e.target.value);
