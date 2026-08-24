@@ -32,7 +32,7 @@ let activeEditorInstance = null;
 const inbuiltFunctions = [
   {
     label: "openNewTab",
-    insertText: "openNewTab('$url');",
+    insertText: "actions.openNewTab('$url');",
     detail: "openNewTab(url)",
   },
   {
@@ -45,7 +45,7 @@ const inbuiltFunctions = [
     insertText: "await window.globalVars.get('$key');",
     detail: "globalVars.get(key)",
   },
-  { label: "sleep", insertText: "sleep($ms);", detail: "sleep(ms)" },
+  { label: "sleep", insertText: "actions.sleep($ms);", detail: "sleep(ms)" },
   {
     label: "console.log",
     insertText: "console.log($msg);",
@@ -53,20 +53,19 @@ const inbuiltFunctions = [
   },
   {
     label: "clickwait_onload",
-    insertText: "clickwait_onload('$xpath');",
+    insertText: "actions.clickwait_onload('$xpath');",
     detail: "clickwait_onload(xpath)",
   },
   {
     label: "write_value_to_xpath",
-    insertText: "write_value_to_xpath('$xpath', '$value');",
+    insertText: "actions.write_value_to_xpath('$xpath', '$value');",
     detail: "write_value_to_xpath(xpath, value)",
   },
   {
     label: "write_to_xpath",
-    insertText: "write_to_xpath('$xpath', '$value');",
+    insertText: "actions.write_to_xpath('$xpath', '$value');",
     detail: "write_to_xpath(xpath, value)",
   }
-  
 ];
 
 function  insertInbuiltFunction(value) {
